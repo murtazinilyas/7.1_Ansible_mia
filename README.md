@@ -14,6 +14,54 @@
 
 ### Решение 1
 
+Плейбук 1
+```YAML
+- hosts: "my"
+  become: true
+  tasks:
+    - name: "Create directory"
+      file:
+        path: "{{ ansible_user_dir }}/apache_mia"
+        state: directory
+    - name: "Unpack archive"
+      unarchive:
+        src: "https://dlcdn.apache.org/kafka/4.1.0/kafka-4.1.0-src.tgz"
+        dest: "{{ ansible_user_dir }}/apache_mia"
+        remote_src: yes
+```
+
+Плейбук 2
+```YAML
+---
+- hosts: "my"
+  become: true
+  tasks:
+  - name: "Install tuned"
+    apt:
+      name: tuned
+      state: present
+      update_cache: yes
+  - name: "Start tuned"
+    systemd:
+      name: tuned
+      enabled: true
+      masked: no
+```
+
+Плейбук 3
+```YAML
+---
+- hosts: "my"
+  become: true
+  vars:
+    hello: "Hello world!"
+  tasks:
+  - name: "Change /etc/motd"
+    copy:
+      content: "{{ hello }}"
+      dest: /etc/motd
+```
+
 ---
 
 ### Задание 2
@@ -23,6 +71,22 @@
 Модифицируйте плейбук из пункта 3, задания 1. В качестве приветствия он должен установить IP-адрес и hostname управляемого хоста, пожелание хорошего дня системному администратору. 
 
 ### Решение 2
+
+```YAML
+---
+- hosts: "my"
+  become: true
+  vars:
+    hello: "Hello admin! Good luck and have a nice day to you!"
+  tasks:
+  - name: "Change /etc/motd"
+    copy:
+      content:
+        - "{{ hello }}"
+        - "{{ ansible_facts.default_ipv4.address }}"
+        - "{{ ansible_facts.hostname }}"
+      dest: /etc/motd
+```
 
 ---
 
@@ -47,3 +111,5 @@
 - предоставьте скриншот браузера, отображающего сконфигурированный index.html в качестве сайта.
 
 ### Решение 3
+
+
