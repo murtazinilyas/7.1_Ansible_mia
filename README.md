@@ -14,7 +14,8 @@
 
 ### Решение 1
 
-Плейбук 1
+*Плейбук 1:*
+
 ```YAML
 - hosts: "my"
   become: true
@@ -30,7 +31,12 @@
         remote_src: yes
 ```
 
-Плейбук 2
+*Результаты выполнения плейбука:*
+![Result t1-1](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-1_res.png)
+![t1-1 on net1](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-1_net1.png)
+![t1-1 on net2](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-1_net2.png)
+
+*Плейбук 2:*
 ```YAML
 ---
 - hosts: "my"
@@ -48,7 +54,13 @@
       masked: no
 ```
 
-Плейбук 3
+*Результаты выполнения плейбука:*
+![Result t1-2](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-2_res.png)
+![t1-2 on net1](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-2_net1.png)
+![t1-2 on net2](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-2_net2.png)
+
+*Плейбук 3:*
+
 ```YAML
 ---
 - hosts: "my"
@@ -62,6 +74,11 @@
       dest: /etc/motd
 ```
 
+*Результаты выполнения плейбука:*
+![Result t1-3](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-3_res.png)
+![t1-3 on net1](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-3_net1.png)
+![t1-3 on net2](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t1-3_net2.png)
+
 ---
 
 ### Задание 2
@@ -71,6 +88,8 @@
 Модифицируйте плейбук из пункта 3, задания 1. В качестве приветствия он должен установить IP-адрес и hostname управляемого хоста, пожелание хорошего дня системному администратору. 
 
 ### Решение 2
+
+*Модифицированные плейбук 3:*
 
 ```YAML
 ---
@@ -87,6 +106,11 @@
         - "{{ ansible_facts.hostname }}"
       dest: /etc/motd
 ```
+
+*Результаты выполнения плейбука:*
+![Result t2](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t2_res.png)
+![t2 on net1](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t2_net1.png)
+![t2 on net2](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t2_net2.png)
 
 ---
 
@@ -112,6 +136,8 @@
 
 ### Решение 3
 
+*Плейбук, использующий роль:*
+
 ```YAML
 ---
 - hosts: "my"
@@ -119,4 +145,74 @@
   roles:
     - mia_apache
 ```
+Ссылка на архив с используемой ролью [mia_apache.tar.gz](https://drive.google.com/file/d/12SwuJfvy9v-x_tlMFKkT30oZKML0SYo6/view?usp=sharing)
 
+**/mia_apache/tasks/main.yml**
+```YAML
+---
+- name: "Install Apache server"
+  apt:
+    name: apache2
+    state: present
+    update_cache: yes
+- name: "Start apache"
+  service:
+    name: apache2
+    state: started
+- name: "Configure index.html"
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+- name: "Open 80 port"
+  ufw:
+    rule: allow
+    port: 80
+    proto: tcp
+- name: "Checking availability of server"
+  uri:
+    url: http://localhost:80
+    method: GET
+    status_code: 200
+    return_content: yes
+```
+
+**/mia_apache/handlers/main.yml**
+```YAML
+---
+- name: "Restart apache server"
+  service:
+    name: apache2
+    state: restarted
+```
+
+**/mia_apache/defaults/main.yml**
+```YAML
+---
+cpu: "{{ ansible_processor }}"
+ram: "{{ ansible_memtotal_mb }}"
+hdd: "{{ ansible_facts['devices']['sda']['size'] }}"
+ip4: "{{ ansible_enp0s8['ipv4']['address'] }}"
+```
+
+**/mia_apache/templates/index.html.j2**
+```html
+!DOCTYPE html>
+<html>
+<body>
+
+<h1>System info:</h1>
+
+<p>CPU info: {{ cpu }}</p>
+<p>Total RAM: {{ ram }}</p>
+<p>Capacity of first HDD: {{ hdd }}</p>
+<p>Host ipv4 address: {{ ip4 }}</p>
+
+</body>
+</html>
+```
+
+*Результат выполнения плейбука:*
+![Result t3](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t-3_res.png)
+
+*Модифицированные стартовые страницы сервера Apache:*
+![Index.html on net1 and net2](https://github.com/murtazinilyas/7.1_Ansible_mia/blob/main/scshots/a_t3_ind.png)
