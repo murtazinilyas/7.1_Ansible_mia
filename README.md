@@ -112,4 +112,11 @@
 
 ### Решение 3
 
+```YAML
+---
+- hosts: "my"
+  become: true
+  roles:
+    - mia_apache
+```
 
